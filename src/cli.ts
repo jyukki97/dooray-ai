@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import chalk from 'chalk';
 import { version } from '../package.json';
+import { logger } from './utils/logger';
 
 const program = new Command();
 
@@ -16,8 +16,8 @@ program
   .command('init')
   .description('Initialize dooray-ai in current project')
   .action(() => {
-    console.log(chalk.green('🚀 Initializing dooray-ai...'));
-    console.log(chalk.blue('This feature will be implemented in upcoming tasks!'));
+    logger.progress('Initializing dooray-ai...');
+    logger.info('This feature will be implemented in upcoming tasks!');
   });
 
 program
@@ -26,23 +26,23 @@ program
   .description('Generate code based on task description')
   .argument('<description>', 'Task description')
   .action((description: string) => {
-    console.log(chalk.green('🤖 Generating code...'));
-    console.log(chalk.blue(`Task: ${description}`));
-    console.log(chalk.yellow('This feature will be implemented in upcoming tasks!'));
+    logger.progress('Generating code...');
+    logger.info(`Task: ${description}`, 'GENERATE');
+    logger.warn('This feature will be implemented in upcoming tasks!');
   });
 
 program
   .command('test')
   .description('Test the CLI setup')
   .action(() => {
-    console.log(chalk.green('✅ dooray-ai CLI is working!'));
-    console.log(chalk.blue(`Version: ${version}`));
-    console.log(chalk.yellow('All systems operational! 🎉'));
+    logger.success('dooray-ai CLI is working!');
+    logger.info(`Version: ${version}`, 'TEST');
+    logger.success('All systems operational! 🎉');
   });
 
 // 에러 처리
 program.on('command:*', () => {
-  console.error(chalk.red('Invalid command: %s\nSee --help for a list of available commands.'), program.args.join(' '));
+  logger.error(`Invalid command: ${program.args.join(' ')}\nSee --help for a list of available commands.`, 'CLI');
   process.exit(1);
 });
 
