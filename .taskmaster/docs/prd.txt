@@ -1,0 +1,154 @@
+# Product Requirements Document: dooray-ai
+
+## Project Overview
+dooray-ai는 Dooray!와 연동하여 자연어 기반 태스크를 처리하고, Git 브랜치 생성부터 코드 자동 생성, 커밋, PR 생성까지 자동화하는 CLI 기반 개발 자동화 도구입니다.
+
+## Goals and Objectives
+- CLI 한 줄 입력으로 전체 개발 워크플로우 자동화
+- Dooray! Task 기반 자동 개발 프로세스 구축
+- AI 기반 코드 생성 및 관리 시스템 구현
+- 개발자 생산성 향상 및 반복 작업 최소화
+
+## Core Features
+
+### Phase 1: Project Foundation
+**프로젝트 기초 설정**
+- Node.js + TypeScript 기반 CLI 애플리케이션 구조
+- Commander.js 또는 Yargs를 사용한 CLI 프레임워크
+- ESLint, Prettier를 통한 코드 품질 관리
+- 모듈화된 아키텍처 설계
+- 설정 파일 관리 시스템
+- 로깅 시스템 구축
+
+### Phase 2: Core CLI Features
+**CLI 인터페이스 및 Git 연동**
+- 기본 CLI 명령어 구조 및 사용자 입력 파싱
+- 도움말 시스템 및 설정 파일 관리
+- Git 저장소 정보 수집 및 브랜치 자동 생성
+- Git 상태 확인 및 자동 커밋/푸시 기능
+- 프로젝트 파일 구조 분석 및 코드 컨텍스트 수집
+- 코드 의존성 분석 및 기존 패턴 학습
+
+### Phase 3: AI Integration
+**LLM 연동 및 코드 생성**
+- OpenAI API 및 Anthropic Claude API 연동
+- LLM 응답 파싱 및 검증 시스템
+- 프롬프트 템플릿 관리 및 토큰 최적화
+- 코드 변경사항 계획 생성 및 파일 생성/수정 로직
+- 코드 스타일 일관성 유지 및 오류 처리
+- 백업 및 롤백 기능
+
+### Phase 4: Dooray! Integration
+**Dooray! API 연동**
+- Dooray! 인증 시스템 구현
+- 태스크, 프로젝트 정보 조회 API
+- 댓글 및 상태 업데이트 API
+- 웹훅 연동 (선택사항)
+- 태스크 ID 기반 작업 정보 수집
+- 태스크 설명 기반 자동 코드 생성
+- 진행 상황 Dooray! 자동 업데이트
+
+### Phase 5: Git Platform Integration
+**GitHub/GitLab 연동**
+- GitHub API 연동 및 Personal Access Token 인증
+- Repository 정보 조회 및 Pull Request 자동 생성
+- PR 설명 자동 작성 및 라벨/Assignee 설정
+- GitLab API 연동 및 Merge Request 생성 (선택사항)
+- GitLab CI/CD 연동 지원
+
+### Phase 6: Advanced Features
+**고도화 기능**
+- AI 기반 코드 리뷰 통합
+- 테스트 코드 자동 생성
+- 문서화 자동 생성
+- 보안 취약점 자동 검사
+- 성능 최적화 제안
+- 템플릿 시스템 구축
+- 프로젝트별 설정 관리
+- 커스텀 명령어 지원
+- 플러그인 시스템 구축
+- 다중 프로젝트 관리
+- 팀 설정 공유 및 협업 기능
+
+### Phase 7: Quality Management
+**품질 관리 및 최적화**
+- 단위, 통합, E2E 테스트 구축
+- 성능 테스트 및 최적화
+- 에러 핸들링 개선
+- 프로그레스 바 및 로딩 인디케이터
+- 상세한 에러 메시지 제공
+- 인터랙티브 모드 구현
+- 설정 마법사 구현
+- 사용 통계 및 분석
+
+### Phase 8: Documentation & Deployment
+**문서화 및 배포**
+- README.md 및 API 문서 자동 생성
+- 사용자 가이드 및 개발자 문서 작성
+- 튜토리얼 및 예제 제작
+- npm 패키지 배포
+- GitHub Actions CI/CD 구축
+- 자동 업데이트 시스템
+- 버전 관리 체계 구축
+
+### Phase 9: Platform Expansion
+**확장성 고려사항**
+- Windows, macOS, Linux 호환성
+- Docker 컨테이너 지원
+- VS Code 익스텐션 개발
+- JetBrains IDE 플러그인 개발
+- 다양한 프로그래밍 언어 지원
+- 프레임워크별 템플릿 제공
+- 마이크로서비스 아키텍처 지원
+- 클라우드 배포 자동화
+
+## Technical Requirements
+
+### Technology Stack
+- **Runtime**: Node.js 18+
+- **Language**: TypeScript
+- **CLI Framework**: Commander.js 또는 Yargs
+- **Code Quality**: ESLint, Prettier
+- **Testing**: Jest, Vitest
+- **Build**: esbuild 또는 rollup
+- **Package Manager**: npm 또는 pnpm
+
+### API Integration
+- **AI Services**: OpenAI API, Anthropic Claude API
+- **Project Management**: Dooray! API
+- **Version Control**: GitHub API, GitLab API
+- **Authentication**: OAuth, Personal Access Tokens
+
+### Architecture
+- 모듈화된 아키텍처
+- 플러그인 시스템 지원
+- 설정 파일 기반 구성 관리
+- 이벤트 기반 아키텍처
+- 로깅 및 에러 추적 시스템
+
+## Success Criteria
+- CLI 명령어 한 줄로 브랜치 생성부터 PR 생성까지 완전 자동화
+- Dooray! 태스크와 Git 워크플로우 완전 연동
+- AI 기반 코드 생성 정확도 80% 이상
+- 개발자 반복 작업 시간 70% 이상 단축
+- 다양한 프로젝트 타입 및 언어 지원
+- 안정적인 CI/CD 파이프라인 구축
+- 활발한 오픈소스 커뮤니티 형성
+
+## Constraints and Considerations
+- API 사용량 및 비용 최적화
+- 보안 및 인증 정보 안전 관리
+- 다양한 프로젝트 구조 호환성
+- 네트워크 의존성 최소화
+- 사용자 경험 및 성능 최적화
+- 크로스 플랫폼 호환성
+- 확장성 및 유지보수성
+
+## Future Vision
+- AI 모델 커스터마이징 지원
+- 기업용 온프레미스 솔루션
+- SaaS 버전 개발
+- 커뮤니티 생태계 구축
+- 교육 및 트레이닝 프로그램
+- 다국어 지원 (i18n)
+- 오프라인 모드 지원 
