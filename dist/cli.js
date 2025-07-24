@@ -9,6 +9,7 @@ const config_1 = require("./commands/config");
 const task_1 = require("./commands/task");
 const branch_1 = require("./commands/branch");
 const pr_1 = require("./commands/pr");
+const help_1 = require("./commands/help");
 const program = new commander_1.Command();
 program
     .name('dooray-ai')
@@ -38,6 +39,7 @@ program.addCommand(config_1.configCommand);
 program.addCommand(task_1.taskCommand);
 program.addCommand(branch_1.branchCommand);
 program.addCommand(pr_1.prCommand);
+program.addCommand(help_1.helpCommand);
 // 하위 호환성을 위한 기본 명령어 유지
 program
     .command('generate')
