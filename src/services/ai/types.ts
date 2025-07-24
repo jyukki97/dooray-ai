@@ -4,9 +4,7 @@
 
 // AI 엔진 종류
 export enum AIEngine {
-  CLAUDE_CODE = 'claude-code',
-  OPENAI = 'openai',
-  ANTHROPIC = 'anthropic'
+  CLAUDE_CODE = 'claude-code'
 }
 
 // AI 요청 메타데이터
@@ -26,13 +24,14 @@ export interface AIResponseMetadata {
   responseTime: number;
   tokensUsed?: number;
   cost?: number;
+  fallbackAttempts?: any[];
 }
 
 // 코드 생성 요청
 export interface CodeGenerationRequest {
   prompt: string;
   language?: string;
-  context?: string;
+  context?: string | undefined;
   maxTokens?: number;
   temperature?: number;
   metadata?: AIRequestMetadata;
@@ -65,7 +64,6 @@ export interface UsageStats {
 // AI 설정
 export interface AIConfig {
   engine: AIEngine;
-  apiKey: string;
   maxTokens?: number;
   temperature?: number;
   timeout?: number;

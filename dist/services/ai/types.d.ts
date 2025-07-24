@@ -2,9 +2,7 @@
  * AI 서비스 공통 타입 정의
  */
 export declare enum AIEngine {
-    CLAUDE_CODE = "claude-code",
-    OPENAI = "openai",
-    ANTHROPIC = "anthropic"
+    CLAUDE_CODE = "claude-code"
 }
 export interface AIRequestMetadata {
     requestId: string;
@@ -20,11 +18,12 @@ export interface AIResponseMetadata {
     responseTime: number;
     tokensUsed?: number;
     cost?: number;
+    fallbackAttempts?: any[];
 }
 export interface CodeGenerationRequest {
     prompt: string;
     language?: string;
-    context?: string;
+    context?: string | undefined;
     maxTokens?: number;
     temperature?: number;
     metadata?: AIRequestMetadata;
@@ -49,7 +48,6 @@ export interface UsageStats {
 }
 export interface AIConfig {
     engine: AIEngine;
-    apiKey: string;
     maxTokens?: number;
     temperature?: number;
     timeout?: number;

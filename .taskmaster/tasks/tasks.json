@@ -29,7 +29,7 @@
         "id": 3,
         "title": "CLI 인터페이스 구현",
         "description": "기본 CLI 명령어 구조와 사용자 입력 처리 시스템을 구현합니다.",
-        "status": "pending",
+        "status": "done",
         "priority": "high",
         "dependencies": [
           2
@@ -77,8 +77,8 @@
               "3.1",
               "3.2"
             ],
-            "details": "- 설정 파일 구조 정의\n- 설정 파일 생성 및 수정 로직\n- 기본값 관리\n- 설정 유효성 검증\n- 설정 마이그레이션 지원",
-            "status": "pending",
+            "details": "- 설정 파일 구조 정의\n- 설정 파일 생성 및 수정 로직\n- 기본값 관리\n- 설정 유효성 검증\n- 설정 마이그레이션 지원\n<info added on 2025-07-24T02:42:01.000Z>\n구현 완료 상태:\n\n1. 설정 파일 구조 (src/services/config/index.ts)\n- DoorayAIConfig 인터페이스 정의\n- 프로젝트, AI, Git, 인증, 로깅, UI 설정 영역 구조화\n- 기본값 및 유효성 검증 로직 구현\n\n2. ConfigManager 클래스 구현\n- ~/.dooray-ai/config.json 파일 관리\n- load(), save(), update() 메서드 제공\n- 자동 마이그레이션 및 백업 기능\n- 환경 변수 오버라이드 지원\n\n3. 검증 및 마이그레이션 시스템\n- 설정값 타입 검증\n- 구성 파일 버전 관리\n- 기존 설정 백업 및 복원\n- 잘못된 설정 자동 수정\n\n4. CLI 통합\n- config 명령어를 통한 설정 관리\n- get, set, reset, validate 서브명령어\n- 사용자 친화적 설정 표시\n</info added on 2025-07-24T02:42:01.000Z>",
+            "status": "done",
             "testStrategy": "설정 파일 읽기/쓰기 및 유효성 검증 테스트"
           },
           {
@@ -88,8 +88,8 @@
             "dependencies": [
               "3.4"
             ],
-            "details": "- 인증 정보 암호화 저장\n- 토큰 관리 기능\n- 인증 상태 확인\n- 토큰 갱신 로직\n- 보안 취약점 방지",
-            "status": "pending",
+            "details": "- 인증 정보 암호화 저장\n- 토큰 관리 기능\n- 인증 상태 확인\n- 토큰 갱신 로직\n- 보안 취약점 방지\n<info added on 2025-07-24T02:43:01.000Z>\n구현 완료 상태:\n\n1. 인증 시스템 아키텍처 (src/services/auth/index.ts)\n- AuthManager 클래스 구현\n- 다중 인증 공급자 지원 (Dooray, GitHub, Claude Code)\n- AES-256-GCM 암호화를 통한 안전한 자격증명 저장\n\n2. 암호화 시스템\n- encrypt() / decrypt() 메서드 구현\n- 시스템 기반 암호화 키 생성\n- 인증 정보 마스킹 및 보안 로깅\n\n3. 인증 상태 관리\n- validateDooraysAuth(), validateGitHubAuth(), validateClaudeCode() 구현\n- 토큰 만료 확인 및 자동 갱신 준비\n- 인증 상태 실시간 검증\n\n4. CLI 통합\n- auth 명령어 구현 (login, logout, status, validate)\n- 사용자 친화적 인증 프로세스\n- 보안 정보 표시 및 관리\n\n5. 보안 강화\n- 민감한 정보 로깅 방지\n- 메모리 내 자격증명 즉시 정리\n- 권한 없는 접근 차단\n</info added on 2025-07-24T02:43:01.000Z>",
+            "status": "done",
             "testStrategy": "인증 정보 암호화 및 복호화 정확성 테스트"
           }
         ]
@@ -111,7 +111,7 @@
         "id": 5,
         "title": "LLM API 연동 시스템",
         "description": "@anthropic-ai/claude-code 패키지를 주요 AI 엔진으로 활용하고, OpenAI와 Anthropic Claude API를 보조적으로 연동하는 시스템을 구현합니다.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "3"
         ],
@@ -132,28 +132,28 @@
             "id": 2,
             "title": "코드 생성 기능 구현",
             "description": "Claude Code의 코드 생성 API를 dooray-ai에 통합합니다.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
-            "details": "",
-            "testStrategy": ""
+            "details": "<info added on 2025-07-24T02:44:01.000Z>\n구현 완료 상태:\n\n1. 코드 생성 엔진 (src/services/ai/code-generator.ts)\n- CodeGenerator 클래스 구현\n- generateCode(): 기본 코드 생성\n- generateProject(): 전체 프로젝트 스캐폴딩\n- improveCode(): 기존 코드 개선\n\n2. 다양한 생성 모드 지원\n- 단일 파일 코드 생성\n- 멀티 파일 프로젝트 생성\n- 코드 분석 및 개선 제안\n- 프레임워크별 최적화\n\n3. CLI 통합 (src/commands/ai/claude-code.ts)\n- ai generate 명령어 구현\n- 언어, 프레임워크, 스타일 옵션 지원\n- 파일 출력 및 디렉토리 저장 기능\n- 향상된 결과 표시 시스템\n\n4. 기술적 특징\n- TypeScript 타입 안전성\n- 에러 처리 및 폴백 시스템\n- 메타데이터 및 통계 수집\n- 사용자 친화적 출력 포맷\n</info added on 2025-07-24T02:44:01.000Z>",
+            "testStrategy": "다양한 언어와 프레임워크에서 코드 생성 테스트"
           },
           {
             "id": 3,
             "title": "AI 엔진 선택 메커니즘",
             "description": "사용자가 AI 엔진을 선택할 수 있는 설정 시스템을 구현합니다.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
-            "details": "",
-            "testStrategy": ""
+            "details": "<info added on 2025-07-24T02:45:01.000Z>\n구현 완료 상태:\n\n1. 엔진 선택기 시스템 (src/services/ai/engine-selector.ts)\n- EngineSelector 클래스 구현\n- 엔진 상태 모니터링 및 관리\n- 자동 엔진 선택 알고리즘\n- 성능 기반 점수 계산 시스템\n\n2. 엔진 상태 관리\n- EngineStatus 인터페이스 정의\n- 가용성, 인증 상태, 성능, 비용 추적\n- 오류 카운트 및 자동 복구 시스템\n- 엔진별 메트릭 수집\n\n3. 설정 시스템 통합\n- EngineSelectionConfig 인터페이스\n- 사용자 선호도 기반 엔진 선택\n- 자동 선택 vs 수동 선택 모드\n- 선택 기준 우선순위 설정\n\n4. 기술적 특징\n- Claude Code 우선 지원\n- 확장 가능한 아키텍처\n- 실시간 상태 업데이트\n- 사용자 친화적 상태 표시\n</info added on 2025-07-24T02:45:01.000Z>",
+            "testStrategy": "엔진 선택 및 전환 기능 테스트"
           },
           {
             "id": 4,
             "title": "폴백 시스템 구현",
             "description": "Claude Code 실패 시 OpenAI/Claude API로 전환하는 폴백 메커니즘을 구현합니다.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
-            "details": "",
-            "testStrategy": ""
+            "details": "<info added on 2025-07-24T02:46:01.000Z>\n구현 완료 상태:\n\n1. 폴백 핸들러 시스템 (src/services/ai/fallback-handler.ts)\n- FallbackHandler 클래스 구현\n- executeWithFallback(): 자동 폴백 실행\n- executeWithEngine(): 특정 엔진 실행\n- 타임아웃 및 재시도 로직\n\n2. 폴백 전략\n- 다중 엔진 순차 시도\n- 재시도 횟수 및 지연 설정\n- 엔진별 성공률 추적\n- 자동 엔진 비활성화/재활성화\n\n3. 모니터링 및 분석\n- FallbackAttempt 정보 수집\n- 폴백 통계 분석\n- 엔진 건강도 체크\n- 상세한 실행 리포트 생성\n\n4. 기술적 특징\n- Promise 기반 비동기 처리\n- 메타데이터 수집 및 전달\n- 사용자 친화적 오류 메시지\n- 확장 가능한 폴백 설정\n</info added on 2025-07-24T02:46:01.000Z>",
+            "testStrategy": "폴백 시나리오 및 오류 복구 테스트"
           }
         ]
       },

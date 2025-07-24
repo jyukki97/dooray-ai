@@ -9,7 +9,9 @@ import { taskCommand } from './commands/task';
 import { branchCommand } from './commands/branch';
 import { prCommand } from './commands/pr';
 import { helpCommand } from './commands/help';
-import { aiTestCommand } from './commands/ai/test';
+import { aiCommand } from './commands/ai';
+import { authCommand } from './commands/auth';
+import workflowCommand from './commands/workflow';
 
 const program = new Command();
 
@@ -48,18 +50,47 @@ program.addCommand(taskCommand);
 program.addCommand(branchCommand);
 program.addCommand(prCommand);
 program.addCommand(helpCommand);
-program.addCommand(aiTestCommand);
+program.addCommand(aiCommand);
+program.addCommand(authCommand);
+program.addCommand(workflowCommand);
 
 // 하위 호환성을 위한 기본 명령어 유지
 program
   .command('generate')
   .alias('gen')
-  .description('Generate code based on task description (legacy)')
-  .argument('<description>', 'Task description')
-  .action((description: string) => {
-    logger.progress('Generating code...');
-    logger.info(`Task: ${description}`, 'GENERATE');
-    logger.warn('Use "dooray-ai task create" for new task creation workflow!');
+  .description('Generate code using Claude Code CLI (no API key required)')
+  .argument('<description>', 'Description of code to generate')
+  .option('--language <lang>', 'Programming language', 'typescript')
+  .action(async (description: string, options) => {
+    try {
+      logger.info('🔄 Redirecting to Claude Code generator...');
+      // 동적으로 Claude Code 클라이언트 사용
+      const { ClaudeCodeClient } = await import('./services/ai/claude-code-client');
+      const client = new ClaudeCodeClient();
+      
+      const result = await client.generateCode({
+        prompt: description,
+        language: options.language,
+        maxTokens: 2000
+      });
+      
+      console.log('\n🚀 Generated Code:');
+      console.log('```' + options.language);
+      console.log(result.code);
+      console.log('```');
+      
+      if (result.explanation) {
+        console.log('\n💡 Explanation:');
+        console.log(result.explanation);
+      }
+      
+      logger.success('Code generation completed! Use "dooray-ai ai generate" for more options.');
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Code generation failed: ${errorMessage}`);
+      logger.info('💡 Make sure Claude Code CLI is installed: https://claude.ai/cli');
+    }
   });
 
 program

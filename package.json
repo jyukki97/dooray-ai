@@ -2,7 +2,7 @@
   "name": "dooray-ai",
   "version": "0.1.0",
   "description": "AI-powered CLI tool for automated development workflow with Dooray! integration",
-  "main": "dist/index.js",
+  "main": "dist/extension.js",
   "bin": {
     "dooray-ai": "dist/cli.js"
   },
@@ -25,12 +25,113 @@
     "dooray",
     "git",
     "development",
-    "workflow"
+    "workflow",
+    "vscode-extension"
   ],
+  "categories": [
+    "Other",
+    "Extension Packs"
+  ],
+  "activationEvents": [
+    "onCommand:dooray-ai.connect",
+    "onCommand:dooray-ai.start",
+    "onCommand:dooray-ai.taskList",
+    "onCommand:dooray-ai.createTask",
+    "workspaceContains:**/.dooray-ai/config.json"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "dooray-ai.connect",
+        "title": "Dooray AI: IDE와 연결",
+        "category": "Dooray AI"
+      },
+      {
+        "command": "dooray-ai.start",
+        "title": "Dooray AI: 시작하기",
+        "category": "Dooray AI"
+      },
+      {
+        "command": "dooray-ai.taskList",
+        "title": "Dooray AI: 작업 목록 보기",
+        "category": "Dooray AI"
+      },
+      {
+        "command": "dooray-ai.createTask",
+        "title": "Dooray AI: 새 작업 생성",
+        "category": "Dooray AI"
+      },
+      {
+        "command": "dooray-ai.aiGenerate",
+        "title": "Dooray AI: AI 코드 생성",
+        "category": "Dooray AI"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "dooray-ai.connect",
+          "when": "workspaceFolder"
+        },
+        {
+          "command": "dooray-ai.start",
+          "when": "workspaceFolder"
+        },
+        {
+          "command": "dooray-ai.taskList",
+          "when": "workspaceFolder"
+        },
+        {
+          "command": "dooray-ai.createTask",
+          "when": "workspaceFolder"
+        },
+        {
+          "command": "dooray-ai.aiGenerate",
+          "when": "editorTextFocus"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "dooray-ai.aiGenerate",
+          "when": "editorTextFocus",
+          "group": "1_modification@1"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "dooray-ai.aiGenerate",
+        "key": "ctrl+shift+d",
+        "mac": "cmd+shift+d",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "Dooray AI",
+      "properties": {
+        "dooray-ai.enableAutoConnect": {
+          "type": "boolean",
+          "default": true,
+          "description": "워크스페이스 열 때 자동으로 Dooray AI CLI에 연결"
+        },
+        "dooray-ai.cliPath": {
+          "type": "string",
+          "default": "",
+          "description": "Dooray AI CLI 실행 파일 경로 (비어있으면 자동 탐지)"
+        },
+        "dooray-ai.websocketPort": {
+          "type": "number",
+          "default": 8080,
+          "description": "IDE-CLI 통신을 위한 WebSocket 포트"
+        }
+      }
+    }
+  },
   "author": "Your Name",
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "vscode": "^1.74.0"
   },
   "files": [
     "dist",
@@ -38,22 +139,23 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.57.0",
     "axios": "^1.6.2",
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
-    "dotenv": "^16.6.1",
     "fs-extra": "^11.2.0",
     "inquirer": "^9.2.12",
     "ora": "^5.4.1",
-    "simple-git": "^3.20.0"
+    "simple-git": "^3.20.0",
+    "ws": "^8.16.0"
   },
   "devDependencies": {
-    "@types/dotenv": "^8.2.3",
     "@types/fs-extra": "^11.0.4",
     "@types/inquirer": "^9.0.7",
     "@types/jest": "^29.5.8",
     "@types/node": "^20.19.9",
+    "@types/vscode": "^1.74.0",
+    "@types/ws": "^8.5.10",
+    "@vscode/test-electron": "^2.3.8",
     "@typescript-eslint/eslint-plugin": "^6.13.1",
     "@typescript-eslint/parser": "^6.13.1",
     "eslint": "^8.54.0",

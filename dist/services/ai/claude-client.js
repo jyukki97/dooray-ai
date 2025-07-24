@@ -115,7 +115,6 @@ class ClaudeClient {
             const responseTime = endTime - startTime;
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             logger_1.logger.error(`Code generation failed (Request: ${requestId}, Time: ${responseTime}ms): ${errorMessage}`);
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             throw new types_1.AIError(`Claude API generation failed: ${errorMessage}`, 'GENERATION_FAILED', types_1.AIEngine.CLAUDE_CODE, requestId);
         }
     }
@@ -140,12 +139,12 @@ class ClaudeClient {
     extractCode(text) {
         // 코드 블록 패턴 매칭
         const codeBlockMatch = text.match(/```[\w]*\n([\s\S]*?)\n```/);
-        if (codeBlockMatch) {
+        if (codeBlockMatch && codeBlockMatch[1]) {
             return codeBlockMatch[1].trim();
         }
         // 인라인 코드 패턴 매칭
         const inlineCodeMatch = text.match(/`([^`]+)`/);
-        if (inlineCodeMatch) {
+        if (inlineCodeMatch && inlineCodeMatch[1]) {
             return inlineCodeMatch[1];
         }
         // 코드 블록이 없으면 전체 텍스트 반환
@@ -157,7 +156,7 @@ class ClaudeClient {
     extractExplanation(text) {
         // 코드 블록 이후의 설명 추출
         const parts = text.split(/```[\w]*\n[\s\S]*?\n```/);
-        if (parts.length > 1) {
+        if (parts.length > 1 && parts[1]) {
             return parts[1].trim();
         }
         // 코드 블록 이전의 설명 추출

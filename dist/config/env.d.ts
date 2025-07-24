@@ -1,12 +1,7 @@
 /**
- * 환경 변수 설정
+ * 환경 변수 설정 (Claude Code 전용, API 키 불필요)
  */
 export interface EnvironmentConfig {
-    claudeApiKey?: string | undefined;
-    openaiApiKey?: string | undefined;
-    anthropicApiKey?: string | undefined;
-    doorayApiKey?: string | undefined;
-    githubToken?: string | undefined;
     nodeEnv: string;
     logLevel: string;
     defaultAiEngine: string;
@@ -18,11 +13,7 @@ export interface EnvironmentConfig {
  */
 export declare function getEnvironmentConfig(): EnvironmentConfig;
 /**
- * API 키 마스킹 유틸리티
- */
-export declare function maskApiKey(apiKey: string): string;
-/**
- * 환경 변수 정보 표시 (보안 정보 제외)
+ * 환경 변수 정보 표시
  */
 export declare function displayEnvironmentInfo(): void;
 export declare const env: EnvironmentConfig;

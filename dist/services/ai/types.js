@@ -8,8 +8,6 @@ exports.AIError = exports.AIEngine = void 0;
 var AIEngine;
 (function (AIEngine) {
     AIEngine["CLAUDE_CODE"] = "claude-code";
-    AIEngine["OPENAI"] = "openai";
-    AIEngine["ANTHROPIC"] = "anthropic";
 })(AIEngine || (exports.AIEngine = AIEngine = {}));
 // 오류 타입
 class AIError extends Error {
