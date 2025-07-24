@@ -54,6 +54,165 @@ program.addCommand(aiCommand);
 program.addCommand(authCommand);
 program.addCommand(workflowCommand);
 
+// MCP 모드 추가 (Cursor 연동용)
+program.addCommand(
+  new Command('mcp')
+    .description('MCP 서버 모드로 실행 (Cursor 연동용)')
+    .action(async () => {
+      try {
+        logger.info('🚀 Dooray AI MCP 모드 시작...');
+        
+        // 간단한 MCP 프로토콜 구현
+        process.stdin.setEncoding('utf-8');
+        
+        const handleMessage = async (data: string) => {
+          try {
+            const message = JSON.parse(data.trim());
+            
+            switch (message.method) {
+              case 'tools/list':
+                return {
+                  jsonrpc: '2.0',
+                  id: message.id,
+                  result: {
+                    tools: [
+                      {
+                        name: 'generate_code',
+                        description: 'Claude Code를 사용하여 코드 생성',
+                        inputSchema: {
+                          type: 'object',
+                          properties: {
+                            prompt: { type: 'string', description: '코드 생성 요청' },
+                            language: { type: 'string', description: '프로그래밍 언어' }
+                          },
+                          required: ['prompt']
+                        }
+                      },
+                      {
+                        name: 'get_dooray_task',
+                        description: 'Dooray 태스크 정보 조회',
+                        inputSchema: {
+                          type: 'object',
+                          properties: {
+                            projectId: { type: 'string', description: 'Dooray 프로젝트 ID' },
+                            taskId: { type: 'string', description: 'Dooray 태스크 ID' }
+                          },
+                          required: ['projectId', 'taskId']
+                        }
+                      }
+                    ]
+                  }
+                };
+                
+              case 'tools/call':
+                const { name, arguments: args } = message.params;
+                
+                if (name === 'generate_code') {
+                  // Claude Code 연동
+                  const { ClaudeCodeClient } = await import('./services/ai/claude-code-client');
+                  const client = new ClaudeCodeClient();
+                  const result = await client.generateCode({
+                    prompt: args.prompt,
+                    language: args.language
+                  });
+                  
+                  return {
+                    jsonrpc: '2.0',
+                    id: message.id,
+                    result: {
+                      content: [{
+                        type: 'text',
+                        text: `# 생성된 코드\n\n\`\`\`${args.language || 'text'}\n${result.code}\n\`\`\`\n\n## 설명\n${result.explanation}`
+                      }]
+                    }
+                  };
+                }
+                
+                                 if (name === 'get_dooray_task') {
+                   // Dooray 연동
+                   const { DoorayClient } = await import('./services/dooray/client');
+                   const credentials = {
+                     apiKey: process.env['DOORAY_API_TOKEN'] || '',
+                     baseUrl: process.env['DOORAY_API_BASE_URL'] || 'https://api.dooray.com'
+                   };
+                   const client = new DoorayClient(credentials);
+                   const task = await client.getTask(args.projectId, args.taskId);
+                  
+                  return {
+                    jsonrpc: '2.0',
+                    id: message.id,
+                    result: {
+                      content: [{
+                        type: 'text',
+                        text: `# Dooray 태스크\n\n**제목:** ${task.subject}\n**내용:**\n${task.body}`
+                      }]
+                    }
+                  };
+                }
+                
+                throw new Error(`Unknown tool: ${name}`);
+                
+              case 'initialize':
+                return {
+                  jsonrpc: '2.0',
+                  id: message.id,
+                  result: {
+                    protocolVersion: '2024-11-05',
+                    capabilities: {
+                      tools: {}
+                    },
+                    serverInfo: {
+                      name: 'dooray-ai',
+                      version: '0.1.0'
+                    }
+                  }
+                };
+                
+              default:
+                throw new Error(`Unknown method: ${message.method}`);
+            }
+                     } catch (error) {
+             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+             logger.error(`MCP 오류: ${errorMessage}`);
+                            return {
+                 jsonrpc: '2.0',
+                 id: null as any,
+                 error: {
+                   code: -1,
+                   message: errorMessage
+                 }
+               };
+           }
+        };
+        
+        // 표준 입력에서 메시지 읽기
+        let buffer = '';
+        process.stdin.on('data', async (chunk) => {
+          buffer += chunk;
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          
+          for (const line of lines) {
+            if (line.trim()) {
+              const response = await handleMessage(line);
+              console.log(JSON.stringify(response));
+            }
+          }
+        });
+        
+        process.stdin.on('end', () => {
+          logger.info('MCP 모드 종료');
+          process.exit(0);
+        });
+        
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        logger.error(`MCP 모드 실행 실패: ${errorMessage}`);
+        process.exit(1);
+      }
+    })
+);
+
 // 프로젝트 상태 확인 명령어 추가
 program.addCommand(
   new Command('status')
