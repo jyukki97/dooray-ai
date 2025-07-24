@@ -2,7 +2,12 @@
 
 import { Command } from 'commander';
 import { version } from '../package.json';
-import { logger } from './utils/logger';
+import { logger, LogLevel } from './utils/logger';
+import { initCommand } from './commands/init';
+import { configCommand } from './commands/config';
+import { taskCommand } from './commands/task';
+import { branchCommand } from './commands/branch';
+import { prCommand } from './commands/pr';
 
 const program = new Command();
 
@@ -11,24 +16,46 @@ program
   .description('AI-powered CLI tool for automated development workflow with Dooray! integration')
   .version(version);
 
-// 기본 명령어
+// 전역 옵션
 program
-  .command('init')
-  .description('Initialize dooray-ai in current project')
-  .action(() => {
-    logger.progress('Initializing dooray-ai...');
-    logger.info('This feature will be implemented in upcoming tasks!');
-  });
+  .option('-v, --verbose', 'Enable verbose logging')
+  .option('-s, --silent', 'Minimize output')
+  .option('--no-color', 'Disable colored output')
+  .option('-c, --config <path>', 'Specify config file path');
 
+// 전역 옵션 처리
+program.hook('preAction', (thisCommand, _actionCommand) => {
+  const opts = thisCommand.opts();
+  
+  if (opts['verbose']) {
+    logger.configure({ level: LogLevel.DEBUG });
+  }
+  
+  if (opts['silent']) {
+    logger.configure({ level: LogLevel.ERROR });
+  }
+  
+  // 컬러 비활성화는 현재 logger에서 지원하지 않음
+  // TODO: 향후 logger 클래스에 컬러 옵션 추가 필요
+});
+
+// 명령어 등록
+program.addCommand(initCommand);
+program.addCommand(configCommand);
+program.addCommand(taskCommand);
+program.addCommand(branchCommand);
+program.addCommand(prCommand);
+
+// 하위 호환성을 위한 기본 명령어 유지
 program
   .command('generate')
   .alias('gen')
-  .description('Generate code based on task description')
+  .description('Generate code based on task description (legacy)')
   .argument('<description>', 'Task description')
   .action((description: string) => {
     logger.progress('Generating code...');
     logger.info(`Task: ${description}`, 'GENERATE');
-    logger.warn('This feature will be implemented in upcoming tasks!');
+    logger.warn('Use "dooray-ai task create" for new task creation workflow!');
   });
 
 program

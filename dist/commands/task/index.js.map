@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sourceRoot":"","sources":["../../../src/commands/task/index.ts"],"names":[],"mappings":";;;AAAA,yCAAoC;AACpC,qCAA6C;AAC7C,iCAAyC;AACzC,qCAA6C;AAC7C,iCAAyC;AAE5B,QAAA,WAAW,GAAG,IAAI,mBAAO,CAAC,MAAM,CAAC;KAC3C,WAAW,CAAC,sBAAsB,CAAC;KACnC,UAAU,CAAC,0BAAiB,CAAC;KAC7B,UAAU,CAAC,sBAAe,CAAC;KAC3B,UAAU,CAAC,0BAAiB,CAAC;KAC7B,UAAU,CAAC,sBAAe,CAAC,CAAC"}

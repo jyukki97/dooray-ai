@@ -1,9 +1,9 @@
 {
   "models": {
     "main": {
-      "provider": "openai",
-      "modelId": "gpt-4o",
-      "maxTokens": 16384,
+      "provider": "anthropic",
+      "modelId": "claude-3-5-sonnet-20241022",
+      "maxTokens": 8192,
       "temperature": 0.2
     },
     "research": {

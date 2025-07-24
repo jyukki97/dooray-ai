@@ -36,7 +36,63 @@
         ],
         "details": "- 기본 CLI 명령어 구조 설계\n- 사용자 입력 파싱 및 검증\n- 도움말 시스템 구현\n- 설정 파일 관리 (~/.dooray-ai/config.json)\n- 사용자 인증 정보 관리",
         "testStrategy": "모든 CLI 명령어가 올바른 파라미터로 실행되고 적절한 오류 메시지를 출력하는지 테스트",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Commander.js 기반 CLI 구조 설계",
+            "description": "Commander.js를 사용하여 기본 CLI 명령어 구조를 설계하고 구현합니다.",
+            "dependencies": [],
+            "details": "- Commander.js 설치 및 초기 설정\n- 기본 명령어 구조 정의 (init, config, task 등)\n- 전역 옵션 설정 (--verbose, --help 등)\n- 명령어 별 옵션 및 인자 정의\n- 명령어 실행 핸들러 구현\n<info added on 2025-07-24T02:04:31.199Z>\n명령어 구조 상세 설계:\n\n1. 기본 명령어 체계\n- init: 프로젝트 초기화 및 설정\n  - --force: 기존 설정 덮어쓰기\n  - --template <type>: 설정 템플릿 선택\n- task\n  - create: 새 작업 생성\n  - list: 작업 목록 조회\n  - update: 작업 상태 업데이트\n  - sync: Dooray와 동기화\n- branch\n  - create: 작업 브랜치 생성\n  - switch: 브랜치 전환\n  - cleanup: 완료된 작업 브랜치 정리\n- pr\n  - create: PR 자동 생성\n  - update: PR 내용 업데이트\n\n2. 전역 옵션 구성\n- --config <path>: 설정 파일 위치 지정\n- --verbose: 상세 로그 출력\n- --silent: 로그 출력 최소화\n- --no-color: 컬러 출력 비활성화\n- --help: 도움말 표시\n\n3. 모듈화 구조\n- commands/\n  - init.ts\n  - task/\n  - branch/\n  - pr/\n- utils/\n  - config.ts\n  - logger.ts\n  - validator.ts\n</info added on 2025-07-24T02:04:31.199Z>\n<info added on 2025-07-24T02:14:26.632Z>\n<info added on 2025-07-24T02:15:45.123Z>\n구현 완료 상태:\n\n1. Commander.js 기반 CLI 구조\n- Commander.js 설치 및 초기 설정 완료\n- 모든 기본 명령어 구조 구현 (init, task, branch, pr)\n- 전역 옵션 구현 (--verbose, --silent, --no-color, --config)\n\n2. 모듈화된 아키텍처\n- commands/ 디렉토리 구조화 완료\n  - init.ts: 프로젝트 초기화\n  - task/: 작업 관리 명령어\n  - branch/: 브랜치 관리 명령어\n  - pr/: PR 관리 명령어\n- utils/ 디렉토리 구성\n  - config.ts: 설정 관리\n  - logger.ts: 로깅 시스템\n  - validator.ts: 입력 검증\n\n3. 기술적 개선사항\n- ES Module과 CommonJS 호환성 해결\n- inquirer 동적 임포트 구현\n- 사용자 친화적 도움말 시스템 구축\n- 전체 CLI 테스트 케이스 통과\n\n다음 단계로 사용자 입력 처리 시스템(서브태스크 3.2) 구현 준비 완료\n</info added on 2025-07-24T02:14:26.632Z>",
+            "status": "done",
+            "testStrategy": "각 명령어가 올바른 옵션과 인자를 받아 정상 동작하는지 테스트"
+          },
+          {
+            "id": 2,
+            "title": "사용자 입력 처리 시스템 구현",
+            "description": "CLI 명령어의 사용자 입력을 파싱하고 검증하는 시스템을 구현합니다.",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "- 입력 파라미터 파싱 로직 구현\n- 입력값 유효성 검증\n- 필수 파라미터 체크\n- 오류 메시지 포맷 정의\n- 대화형 프롬프트 구현",
+            "status": "pending",
+            "testStrategy": "다양한 입력 시나리오에 대한 파싱 및 검증 테스트"
+          },
+          {
+            "id": 3,
+            "title": "도움말 시스템 개발",
+            "description": "각 명령어에 대한 상세 도움말과 사용 예제를 제공하는 시스템을 구현합니다.",
+            "dependencies": [
+              "3.1",
+              "3.2"
+            ],
+            "details": "- 명령어별 도움말 문서 작성\n- 사용 예제 추가\n- 오류 메시지 가이드\n- 도움말 포맷팅 및 스타일링\n- 다국어 지원 준비",
+            "status": "pending",
+            "testStrategy": "도움말 출력 포맷과 내용의 정확성 검증"
+          },
+          {
+            "id": 4,
+            "title": "설정 파일 관리 시스템 구현",
+            "description": "~/.dooray-ai/config.json 파일을 통한 설정 관리 시스템을 구현합니다.",
+            "dependencies": [
+              "3.1",
+              "3.2"
+            ],
+            "details": "- 설정 파일 구조 정의\n- 설정 파일 생성 및 수정 로직\n- 기본값 관리\n- 설정 유효성 검증\n- 설정 마이그레이션 지원",
+            "status": "pending",
+            "testStrategy": "설정 파일 읽기/쓰기 및 유효성 검증 테스트"
+          },
+          {
+            "id": 5,
+            "title": "사용자 인증 정보 관리",
+            "description": "사용자의 Dooray! 및 GitHub 인증 정보를 안전하게 관리하는 시스템을 구현합니다.",
+            "dependencies": [
+              "3.4"
+            ],
+            "details": "- 인증 정보 암호화 저장\n- 토큰 관리 기능\n- 인증 상태 확인\n- 토큰 갱신 로직\n- 보안 취약점 방지",
+            "status": "pending",
+            "testStrategy": "인증 정보 암호화 및 복호화 정확성 테스트"
+          }
+        ]
       },
       {
         "id": 4,
@@ -110,7 +166,7 @@
       "version": "1.0.0",
       "created": "2025-07-23T12:38:37.727Z",
       "description": "Tasks for master context",
-      "updated": "2025-07-23T12:51:33.496Z"
+      "updated": "2025-07-24T02:14:11.301Z"
     }
   }
 }
