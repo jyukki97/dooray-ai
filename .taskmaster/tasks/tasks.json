@@ -53,8 +53,8 @@
             "dependencies": [
               "3.1"
             ],
-            "details": "- 입력 파라미터 파싱 로직 구현\n- 입력값 유효성 검증\n- 필수 파라미터 체크\n- 오류 메시지 포맷 정의\n- 대화형 프롬프트 구현",
-            "status": "pending",
+            "details": "- 입력 파라미터 파싱 로직 구현\n- 입력값 유효성 검증\n- 필수 파라미터 체크\n- 오류 메시지 포맷 정의\n- 대화형 프롬프트 구현\n<info added on 2025-07-24T02:16:34.760Z>\n구현 세부사항:\n\n- src/validators/ 디렉토리 구성\n  - StringValidator: 문자열 길이, 포맷, 필수값 검증\n  - NumberValidator: 숫자 범위, 정수/실수 구분\n  - ArrayValidator: 배열 요소 타입, 길이 검증\n  - CustomValidator: 사용자 정의 검증 규칙 적용\n\n- src/utils/input.ts 구현\n  - parseCommandArgs(): 명령행 인자 파싱\n  - validateRequired(): 필수 파라미터 존재 여부 확인\n  - sanitizeInput(): 입력값 정제 및 이스케이프 처리\n  - formatErrorMessage(): 표준화된 오류 메시지 생성\n\n- 대화형 프롬프트 개선사항\n  - 단계별 입력 가이드 추가\n  - 입력값 실시간 검증\n  - 자동완성 기능 구현\n  - 기본값 제공 및 히스토리 관리\n\n- 오류 처리 시스템\n  - 오류 코드 체계 정의 (E001-E999)\n  - 사용자 친화적 오류 메시지 템플릿\n  - 디버그 정보 로깅\n  - 오류 발생 시 복구 방안 제시\n</info added on 2025-07-24T02:16:34.760Z>\n<info added on 2025-07-24T02:21:36.028Z>\n구현 완료 보고 및 상세 구현 내역:\n\n✅ 입력 처리 시스템 구현 완료\n\n1. 검증 시스템 아키텍처 (src/validators/)\n- BaseValidator 추상 클래스 구현\n  - validate() 메서드 표준화\n  - 체인 방식 검증 지원\n  - 커스텀 검증 규칙 확장성 제공\n- 특화된 검증기 구현\n  - StringValidator: 이메일, URL, 길이, 정규식 패턴 검증\n  - NumberValidator: 범위, 정수/실수, 양수/음수 검증\n  - ArrayValidator: 길이, 요소 타입, 중복 검증\n\n2. 입력 처리 유틸리티 (src/utils/input.ts)\n- 명령행 인자 파서 구현\n- 필수값 검증 시스템\n- XSS 방지 및 보안 처리\n- 사용자 친화적 오류 메시지 생성기\n\n3. 오류 관리 체계 (src/utils/errors.ts)\n- 체계적 오류 코드 시스템 (E001-E599)\n- DoorayAIError 표준 오류 클래스\n- 개발자 디버그 정보 시스템\n- 사용자 가이드 메시지 템플릿\n\n4. 실제 적용 및 검증\n- task create 명령어 입력 검증\n- 실시간 유효성 검사\n- 브랜치명 안전성 검증\n- 전체 테스트 케이스 검증 완료\n\n기술적 성과:\n- TypeScript strict mode 적용으로 타입 안전성 확보\n- 확장 가능한 검증 시스템 설계\n- 사용자 경험 최적화\n- 보안 강화 및 입력값 검증 체계 구축\n</info added on 2025-07-24T02:21:36.028Z>",
+            "status": "done",
             "testStrategy": "다양한 입력 시나리오에 대한 파싱 및 검증 테스트"
           },
           {
@@ -110,15 +110,52 @@
       {
         "id": 5,
         "title": "LLM API 연동 시스템",
-        "description": "OpenAI, Anthropic Claude API 연동 및 응답 처리 시스템을 구현합니다.",
+        "description": "@anthropic-ai/claude-code 패키지를 주요 AI 엔진으로 활용하고, OpenAI와 Anthropic Claude API를 보조적으로 연동하는 시스템을 구현합니다.",
         "status": "pending",
-        "priority": "high",
         "dependencies": [
           4
         ],
-        "details": "- OpenAI API 연동\n- Anthropic Claude API 연동\n- LLM 응답 파싱 및 검증\n- 프롬프트 템플릿 관리\n- 토큰 사용량 최적화\n- API 키 관리 및 보안",
-        "testStrategy": "API 호출이 정상적으로 이루어지고 응답이 올바르게 파싱되는지 테스트",
-        "subtasks": []
+        "priority": "high",
+        "details": "- @anthropic-ai/claude-code 패키지 통합\n- Claude Code 코드 생성 기능 최적화\n- OpenAI, Anthropic Claude API 보조 연동\n- LLM 응답 파싱 및 검증\n- 프롬프트 템플릿 관리\n- 토큰 사용량 최적화\n- API 키 관리 및 보안\n- AI 엔진 선택 옵션 구현",
+        "testStrategy": "- Claude Code 패키지 기능이 정상 작동하는지 테스트\n- 코드 생성 결과물의 품질 검증\n- API 호출 및 응답 파싱 테스트\n- AI 엔진 전환 기능 테스트",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "@anthropic-ai/claude-code 패키지 설정",
+            "description": "Claude Code 패키지 설치 및 초기 설정을 구현합니다.",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "코드 생성 기능 구현",
+            "description": "Claude Code의 코드 생성 API를 dooray-ai에 통합합니다.",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "AI 엔진 선택 메커니즘",
+            "description": "사용자가 AI 엔진을 선택할 수 있는 설정 시스템을 구현합니다.",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "폴백 시스템 구현",
+            "description": "Claude Code 실패 시 OpenAI/Claude API로 전환하는 폴백 메커니즘을 구현합니다.",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 6,
@@ -166,7 +203,7 @@
       "version": "1.0.0",
       "created": "2025-07-23T12:38:37.727Z",
       "description": "Tasks for master context",
-      "updated": "2025-07-24T02:14:11.301Z"
+      "updated": "2025-07-24T02:21:14.846Z"
     }
   }
 }
