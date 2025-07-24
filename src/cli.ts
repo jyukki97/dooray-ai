@@ -54,6 +54,104 @@ program.addCommand(aiCommand);
 program.addCommand(authCommand);
 program.addCommand(workflowCommand);
 
+// 프로젝트 상태 확인 명령어 추가
+program.addCommand(
+  new Command('status')
+    .description('프로젝트 상태 확인')
+    .option('-v, --verbose', '상세 정보 표시')
+    .option('-j, --json', 'JSON 형식으로 출력')
+    .action(async (options) => {
+      try {
+        logger.info('프로젝트 상태를 확인하고 있습니다...');
+        
+        console.log('\n📊 Dooray AI 프로젝트 상태\n');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+        
+        // 기본 프로젝트 정보
+        const fs = await import('fs-extra');
+        const path = await import('path');
+        
+        const packageJsonPath = path.join(process.cwd(), 'package.json');
+        if (await fs.pathExists(packageJsonPath)) {
+          const packageJson = await fs.readJson(packageJsonPath);
+          console.log('📁 프로젝트 정보');
+          console.log(`   이름: ${packageJson.name || '알 수 없음'}`);
+          console.log(`   버전: ${packageJson.version || '알 수 없음'}`);
+          console.log(`   설명: ${packageJson.description || '설명 없음'}`);
+          console.log(`   디렉토리: ${process.cwd()}\n`);
+        }
+        
+        // Git 상태 확인
+        const { execSync } = await import('child_process');
+        try {
+          if (await fs.pathExists(path.join(process.cwd(), '.git'))) {
+            console.log('🌿 Git 상태');
+            const branch = execSync('git branch --show-current', { encoding: 'utf8' }).trim();
+            const status = execSync('git status --porcelain', { encoding: 'utf8' });
+            console.log(`   현재 브랜치: ${branch}`);
+            console.log(`   상태: ${status.length > 0 ? '⚠️ 변경사항 있음' : '✅ 깨끗함'}`);
+            
+            try {
+              const remote = execSync('git remote get-url origin', { encoding: 'utf8' }).trim();
+              console.log(`   원격 저장소: ${remote}`);
+            } catch {
+              console.log(`   원격 저장소: 설정되지 않음`);
+            }
+            console.log('');
+          } else {
+            console.log('🌿 Git: ❌ Git 저장소 아님\n');
+          }
+        } catch {
+          console.log('🌿 Git: ❌ Git 정보를 가져올 수 없음\n');
+        }
+        
+        // 설정 상태 확인
+        const configPaths = [
+          path.join(process.cwd(), '.dooray-ai', 'config.json'),
+          path.join(require('os').homedir(), '.dooray-ai', 'config.json')
+        ];
+        
+        console.log('⚙️ 설정 상태');
+        let configFound = false;
+        for (const configPath of configPaths) {
+          if (await fs.pathExists(configPath)) {
+            console.log(`   설정 파일: ✅ ${configPath}`);
+            configFound = true;
+            break;
+          }
+        }
+        if (!configFound) {
+          console.log(`   설정 파일: ❌ 없음 (dooray-ai config init 실행 권장)`);
+        }
+        console.log('');
+        
+        // 종속성 상태
+        if (await fs.pathExists(packageJsonPath)) {
+          const packageJson = await fs.readJson(packageJsonPath);
+          const deps = packageJson.dependencies || {};
+          const devDeps = packageJson.devDependencies || {};
+          const totalDeps = Object.keys(deps).length + Object.keys(devDeps).length;
+          
+          console.log('📦 종속성 상태');
+          console.log(`   총 패키지: ${totalDeps}`);
+          console.log(`   운영 환경: ${Object.keys(deps).length}`);
+          console.log(`   개발 환경: ${Object.keys(devDeps).length}\n`);
+        }
+        
+        // 개선 권장사항
+        console.log('💡 권장 사항');
+        console.log('   • README.md를 최신 상태로 유지하세요');
+        console.log('   • 정기적으로 종속성을 업데이트하세요 (npm update)');
+        console.log('   • 보안 취약점을 확인하세요 (npm audit)');
+        console.log('   • 테스트를 작성하고 실행하세요 (npm test)');
+        console.log('');
+        
+      } catch (error) {
+        logger.error('상태 확인 중 오류가 발생했습니다:', error);
+      }
+    })
+);
+
 // 하위 호환성을 위한 기본 명령어 유지
 program
   .command('generate')

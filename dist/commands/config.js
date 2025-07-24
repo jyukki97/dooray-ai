@@ -32,300 +32,342 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.configCommand = void 0;
+exports.CONFIG_DIR = exports.CONFIG_FILE = exports.configCommand = void 0;
+exports.loadConfig = loadConfig;
 const commander_1 = require("commander");
 const logger_1 = require("../utils/logger");
-const config_1 = require("../services/config");
-exports.configCommand = new commander_1.Command('config')
-    .description('Manage dooray-ai configuration')
-    .option('-g, --get <key>', 'Get configuration value')
-    .option('-s, --set <key=value>', 'Set configuration value')
-    .option('-l, --list', 'List all configuration')
-    .option('-r, --reset', 'Reset configuration to defaults')
-    .option('--global', 'Use global configuration instead of project configuration')
-    .option('--init', 'Initialize configuration files')
-    .option('--paths', 'Show configuration file paths')
-    .action(async (options) => {
+const fs_extra_1 = __importDefault(require("fs-extra"));
+const path_1 = __importDefault(require("path"));
+const os_1 = __importDefault(require("os"));
+const CONFIG_DIR = path_1.default.join(os_1.default.homedir(), '.dooray-ai');
+exports.CONFIG_DIR = CONFIG_DIR;
+const CONFIG_FILE = path_1.default.join(CONFIG_DIR, 'config.json');
+exports.CONFIG_FILE = CONFIG_FILE;
+const defaultConfig = {
+    ai: {
+        provider: 'claude',
+        model: 'claude-3-sonnet-20240229',
+        temperature: 0.7,
+        maxTokens: 4000,
+    },
+    dooray: {
+        domain: '',
+        defaultProject: undefined,
+        apiToken: undefined,
+    },
+    git: {
+        defaultBranch: 'main',
+        branchPrefix: 'feat/',
+        autoCommit: true,
+        autoPush: false,
+    },
+    github: {
+        owner: undefined,
+        repo: undefined,
+        token: undefined,
+        autoCreatePR: true,
+    },
+    workflow: {
+        autoMode: false,
+        confirmSteps: true,
+        parallelTasks: false,
+    },
+    ui: {
+        colorOutput: true,
+        progressBar: true,
+        verbose: false,
+    },
+};
+async function ensureConfigDir() {
+    await fs_extra_1.default.ensureDir(CONFIG_DIR);
+}
+async function loadConfig() {
     try {
-        // 초기화 옵션
-        if (options.init) {
-            await config_1.configManager.initialize(true);
-            return;
+        if (await fs_extra_1.default.pathExists(CONFIG_FILE)) {
+            const configData = await fs_extra_1.default.readJson(CONFIG_FILE);
+            return { ...defaultConfig, ...configData };
         }
-        // 경로 표시 옵션
-        if (options.paths) {
-            const paths = config_1.configManager.getConfigPaths();
-            const exists = await config_1.configManager.exists();
-            logger_1.logger.info('Configuration File Paths:');
-            console.log(`📁 Project: ${paths.project} ${exists.project ? '✅' : '❌'}`);
-            console.log(`🌐 Global: ${paths.global} ${exists.global ? '✅' : '❌'}`);
-            return;
-        }
-        // 설정 목록 표시
-        if (options.list) {
-            const config = await config_1.configManager.load();
-            logger_1.logger.info('Current Configuration:');
-            console.log(JSON.stringify(config, null, 2));
-            return;
-        }
-        // 설정값 조회
-        if (options.get) {
-            const config = await config_1.configManager.load();
-            const value = getNestedValue(config, options.get);
-            if (value !== undefined) {
-                logger_1.logger.info(`${options.get}: ${JSON.stringify(value, null, 2)}`);
-            }
-            else {
-                logger_1.logger.error(`Configuration key not found: ${options.get}`);
-            }
-            return;
-        }
-        // 설정값 설정
-        if (options.set) {
-            const [key, ...valueParts] = options.set.split('=');
-            const value = valueParts.join('='); // '=' 문자가 포함된 값 처리
-            if (!key || value === undefined) {
-                logger_1.logger.error('Invalid format. Use: --set key=value');
-                process.exit(1);
-            }
-            const config = await config_1.configManager.load();
-            setNestedValue(config, key, value);
-            await config_1.configManager.save(config, options.global);
-            logger_1.logger.success(`Set ${key} = ${value} ${options.global ? '(global)' : '(project)'}`);
-            return;
-        }
-        // 설정 초기화
-        if (options.reset) {
-            const inquirer = await Promise.resolve().then(() => __importStar(require('inquirer')));
-            const scope = options.global ? 'global' : 'project';
-            const { confirm } = await inquirer.default.prompt([
-                {
-                    type: 'confirm',
-                    name: 'confirm',
-                    message: `Are you sure you want to reset ${scope} configuration?`,
-                    default: false
-                }
-            ]);
-            if (confirm) {
-                await config_1.configManager.remove(options.global);
-                await config_1.configManager.initialize();
-                logger_1.logger.success(`${scope} configuration reset successfully`);
-            }
-            return;
-        }
-        // 대화형 설정 모드
-        await interactiveConfig(options.global);
     }
     catch (error) {
-        logger_1.logger.error(`Configuration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        process.exit(1);
+        logger_1.logger.warn('설정 파일 로드 중 오류 발생, 기본 설정을 사용합니다.');
+    }
+    return defaultConfig;
+}
+async function saveConfig(config) {
+    await ensureConfigDir();
+    await fs_extra_1.default.writeJson(CONFIG_FILE, config, { spaces: 2 });
+    logger_1.logger.info('설정이 저장되었습니다.');
+}
+async function getConfigValue(key) {
+    const config = await loadConfig();
+    const keys = key.split('.');
+    let value = config;
+    for (const k of keys) {
+        if (value && typeof value === 'object' && k in value) {
+            value = value[k];
+        }
+        else {
+            return undefined;
+        }
+    }
+    return value;
+}
+async function setConfigValue(key, value) {
+    const config = await loadConfig();
+    const keys = key.split('.');
+    let current = config;
+    for (let i = 0; i < keys.length - 1; i++) {
+        if (!(keys[i] in current)) {
+            current[keys[i]] = {};
+        }
+        current = current[keys[i]];
+    }
+    const lastKey = keys[keys.length - 1];
+    // 타입 변환
+    if (value === 'true')
+        current[lastKey] = true;
+    else if (value === 'false')
+        current[lastKey] = false;
+    else if (!isNaN(Number(value)))
+        current[lastKey] = Number(value);
+    else
+        current[lastKey] = value;
+    await saveConfig(config);
+}
+const configCommand = new commander_1.Command('config')
+    .description('Dooray AI 설정 관리');
+exports.configCommand = configCommand;
+// 설정 초기화
+configCommand
+    .command('init')
+    .description('기본 설정 파일 생성')
+    .option('-f, --force', '기존 설정 파일 덮어쓰기')
+    .action(async (options) => {
+    try {
+        if (!options.force && await fs_extra_1.default.pathExists(CONFIG_FILE)) {
+            logger_1.logger.error('설정 파일이 이미 존재합니다. --force 옵션을 사용하여 덮어쓸 수 있습니다.');
+            return;
+        }
+        await saveConfig(defaultConfig);
+        logger_1.logger.success('기본 설정 파일이 생성되었습니다.');
+        logger_1.logger.info(`설정 파일 위치: ${CONFIG_FILE}`);
+    }
+    catch (error) {
+        logger_1.logger.error('설정 파일 생성 중 오류가 발생했습니다:', error);
     }
 });
-/**
- * 중첩된 객체에서 값 조회
- */
-function getNestedValue(obj, path) {
-    return path.split('.').reduce((current, key) => current?.[key], obj);
-}
-/**
- * 중첩된 객체에 값 설정
- */
-function setNestedValue(obj, path, value) {
-    const keys = path.split('.');
-    const lastKey = keys.pop();
-    const target = keys.reduce((current, key) => {
-        if (!current[key])
-            current[key] = {};
-        return current[key];
-    }, obj);
-    // 값 타입 추론 및 변환
-    if (value === 'true') {
-        target[lastKey] = true;
-    }
-    else if (value === 'false') {
-        target[lastKey] = false;
-    }
-    else if (value === 'null') {
-        target[lastKey] = null;
-    }
-    else if (!isNaN(Number(value)) && value.trim() !== '') {
-        target[lastKey] = Number(value);
-    }
-    else {
-        target[lastKey] = value;
-    }
-}
-/**
- * 대화형 설정 모드
- */
-async function interactiveConfig(global = false) {
-    const scope = global ? 'global' : 'project';
-    logger_1.logger.info(`Interactive Configuration Mode (${scope})`);
-    const config = await config_1.configManager.load();
-    const inquirer = await Promise.resolve().then(() => __importStar(require('inquirer')));
-    const answers = await inquirer.default.prompt([
-        {
-            type: 'input',
-            name: 'projectName',
-            message: 'Project Name:',
-            default: config.project?.name || '',
-            when: !global
-        },
-        {
-            type: 'input',
-            name: 'projectDescription',
-            message: 'Project Description:',
-            default: config.project?.description || '',
-            when: !global
-        },
-        {
-            type: 'number',
-            name: 'aiMaxTokens',
-            message: 'AI Max Tokens:',
-            default: config.ai.maxTokens,
-            validate: (input) => {
-                return input >= 100 && input <= 100000 ? true : 'Must be between 100 and 100000';
-            }
-        },
-        {
-            type: 'number',
-            name: 'aiTemperature',
-            message: 'AI Temperature (0-2):',
-            default: config.ai.temperature,
-            validate: (input) => {
-                return input >= 0 && input <= 2 ? true : 'Must be between 0 and 2';
-            }
-        },
-        {
-            type: 'input',
-            name: 'gitDefaultBranch',
-            message: 'Git Default Branch:',
-            default: config.git.defaultBranch
-        },
-        {
-            type: 'confirm',
-            name: 'gitAutoCommit',
-            message: 'Enable Git Auto Commit:',
-            default: config.git.autoCommit
-        },
-        {
-            type: 'input',
-            name: 'gitCommitTemplate',
-            message: 'Git Commit Message Template:',
-            default: config.git.commitMessageTemplate
-        },
-        {
-            type: 'input',
-            name: 'doorayProjectId',
-            message: 'Dooray! Project ID (optional):',
-            default: config.dooray?.projectId || ''
-        },
-        {
-            type: 'input',
-            name: 'doorayApiUrl',
-            message: 'Dooray! API URL (optional):',
-            default: config.dooray?.apiUrl || ''
-        },
-        {
-            type: 'input',
-            name: 'githubUsername',
-            message: 'GitHub Username (optional):',
-            default: config.github?.username || ''
-        },
-        {
-            type: 'input',
-            name: 'githubRepository',
-            message: 'GitHub Repository (optional):',
-            default: config.github?.repository || ''
-        },
-        {
-            type: 'list',
-            name: 'preferenceLanguage',
-            message: 'Preferred Language:',
-            choices: [
-                { name: '한국어', value: 'ko' },
-                { name: 'English', value: 'en' }
-            ],
-            default: config.preferences.language
-        },
-        {
-            type: 'list',
-            name: 'preferenceLogLevel',
-            message: 'Log Level:',
-            choices: ['error', 'warn', 'info', 'debug'],
-            default: config.preferences.logLevel
-        },
-        {
-            type: 'confirm',
-            name: 'preferenceColorOutput',
-            message: 'Enable Color Output:',
-            default: config.preferences.colorOutput
+// 설정 값 조회
+configCommand
+    .command('get <key>')
+    .description('설정 값 조회')
+    .action(async (key) => {
+    try {
+        const value = await getConfigValue(key);
+        if (value === undefined) {
+            logger_1.logger.error(`설정 키 '${key}'를 찾을 수 없습니다.`);
+            return;
         }
-    ]);
-    // 설정 업데이트
-    const updates = {};
-    if (!global) {
-        updates.project = {
-            ...config.project,
-            name: answers.projectName,
-            description: answers.projectDescription
-        };
+        console.log(`${key} = ${JSON.stringify(value, null, 2)}`);
     }
-    updates.ai = {
-        ...config.ai,
-        maxTokens: answers.aiMaxTokens,
-        temperature: answers.aiTemperature
-    };
-    updates.git = {
-        ...config.git,
-        defaultBranch: answers.gitDefaultBranch,
-        autoCommit: answers.gitAutoCommit,
-        commitMessageTemplate: answers.gitCommitTemplate
-    };
-    if (answers.doorayProjectId || answers.doorayApiUrl) {
-        updates.dooray = {
-            projectId: answers.doorayProjectId || undefined,
-            apiUrl: answers.doorayApiUrl || undefined
-        };
+    catch (error) {
+        logger_1.logger.error('설정 조회 중 오류가 발생했습니다:', error);
     }
-    if (answers.githubUsername || answers.githubRepository) {
-        updates.github = {
-            username: answers.githubUsername || undefined,
-            repository: answers.githubRepository || undefined
-        };
+});
+// 설정 값 변경
+configCommand
+    .command('set <key> <value>')
+    .description('설정 값 변경')
+    .action(async (key, value) => {
+    try {
+        await setConfigValue(key, value);
+        logger_1.logger.success(`설정 '${key}'가 '${value}'로 변경되었습니다.`);
     }
-    updates.preferences = {
-        ...config.preferences,
-        language: answers.preferenceLanguage,
-        logLevel: answers.preferenceLogLevel,
-        colorOutput: answers.preferenceColorOutput
-    };
-    await config_1.configManager.save(updates, global);
-    logger_1.logger.success(`Configuration updated successfully (${scope})!`);
-}
-// 도움말 확장
-exports.configCommand.addHelpText('after', `
-
-Configuration Examples:
-  $ dooray-ai config --init                     Initialize configuration
-  $ dooray-ai config --list                     Show all configuration
-  $ dooray-ai config --get ai.maxTokens         Get specific value
-  $ dooray-ai config --set ai.maxTokens=2000    Set specific value
-  $ dooray-ai config --global --list            Show global configuration
-  $ dooray-ai config --paths                    Show config file paths
-
-Configuration Hierarchy:
-  1. Project configuration (.dooray-ai/config.json) - highest priority
-  2. Global configuration (~/.dooray-ai/config.json) - fallback
-  3. Default values - final fallback
-
-Available Settings:
-  • project.name, project.description, project.version
-  • ai.maxTokens, ai.temperature, ai.timeout
-  • git.defaultBranch, git.autoCommit, git.commitMessageTemplate
-  • dooray.projectId, dooray.apiUrl
-  • github.username, github.repository
-  • preferences.language, preferences.logLevel, preferences.colorOutput
-`);
+    catch (error) {
+        logger_1.logger.error('설정 변경 중 오류가 발생했습니다:', error);
+    }
+});
+// 전체 설정 출력
+configCommand
+    .command('list')
+    .alias('ls')
+    .description('전체 설정 보기')
+    .option('-k, --keys-only', '설정 키만 표시')
+    .action(async (options) => {
+    try {
+        const config = await loadConfig();
+        if (options.keysOnly) {
+            const printKeys = (obj, prefix = '') => {
+                Object.keys(obj).forEach(key => {
+                    const fullKey = prefix ? `${prefix}.${key}` : key;
+                    if (typeof obj[key] === 'object' && obj[key] !== null) {
+                        printKeys(obj[key], fullKey);
+                    }
+                    else {
+                        console.log(fullKey);
+                    }
+                });
+            };
+            printKeys(config);
+        }
+        else {
+            console.log(JSON.stringify(config, null, 2));
+        }
+    }
+    catch (error) {
+        logger_1.logger.error('설정 목록 조회 중 오류가 발생했습니다:', error);
+    }
+});
+// 설정 파일 위치 출력
+configCommand
+    .command('path')
+    .description('설정 파일 경로 출력')
+    .action(() => {
+    console.log(CONFIG_FILE);
+});
+// 설정 검증
+configCommand
+    .command('validate')
+    .description('설정 파일 유효성 검사')
+    .action(async () => {
+    try {
+        const config = await loadConfig();
+        const errors = [];
+        // AI 설정 검증
+        if (!['claude', 'openai', 'auto'].includes(config.ai.provider)) {
+            errors.push('ai.provider는 claude, openai, auto 중 하나여야 합니다.');
+        }
+        if (config.ai.temperature < 0 || config.ai.temperature > 2) {
+            errors.push('ai.temperature는 0과 2 사이의 값이어야 합니다.');
+        }
+        if (config.ai.maxTokens <= 0) {
+            errors.push('ai.maxTokens는 양수여야 합니다.');
+        }
+        // Dooray 설정 검증
+        if (!config.dooray.domain) {
+            errors.push('dooray.domain은 필수 설정입니다.');
+        }
+        // Git 설정 검증
+        if (!config.git.defaultBranch) {
+            errors.push('git.defaultBranch는 필수 설정입니다.');
+        }
+        if (errors.length === 0) {
+            logger_1.logger.success('설정 파일이 유효합니다.');
+        }
+        else {
+            logger_1.logger.error('설정 파일에 다음 오류가 있습니다:');
+            errors.forEach(error => logger_1.logger.error(`- ${error}`));
+        }
+    }
+    catch (error) {
+        logger_1.logger.error('설정 검증 중 오류가 발생했습니다:', error);
+    }
+});
+// 설정 백업
+configCommand
+    .command('backup')
+    .description('설정 파일 백업')
+    .option('-o, --output <path>', '백업 파일 경로')
+    .action(async (options) => {
+    try {
+        if (!await fs_extra_1.default.pathExists(CONFIG_FILE)) {
+            logger_1.logger.error('백업할 설정 파일이 존재하지 않습니다.');
+            return;
+        }
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const backupPath = options.output || path_1.default.join(CONFIG_DIR, `config-backup-${timestamp}.json`);
+        await fs_extra_1.default.copy(CONFIG_FILE, backupPath);
+        logger_1.logger.success(`설정 파일이 백업되었습니다: ${backupPath}`);
+    }
+    catch (error) {
+        logger_1.logger.error('설정 백업 중 오류가 발생했습니다:', error);
+    }
+});
+// 설정 복원
+configCommand
+    .command('restore <backupPath>')
+    .description('백업에서 설정 복원')
+    .action(async (backupPath) => {
+    try {
+        if (!await fs_extra_1.default.pathExists(backupPath)) {
+            logger_1.logger.error('백업 파일이 존재하지 않습니다.');
+            return;
+        }
+        // 백업 파일 검증
+        const backupConfig = await fs_extra_1.default.readJson(backupPath);
+        await fs_extra_1.default.copy(backupPath, CONFIG_FILE);
+        logger_1.logger.success('설정이 복원되었습니다.');
+    }
+    catch (error) {
+        logger_1.logger.error('설정 복원 중 오류가 발생했습니다:', error);
+    }
+});
+// 대화형 설정 마법사
+configCommand
+    .command('wizard')
+    .description('대화형 설정 마법사')
+    .action(async () => {
+    const inquirer = await Promise.resolve().then(() => __importStar(require('inquirer')));
+    try {
+        logger_1.logger.info('Dooray AI 설정 마법사를 시작합니다...');
+        const answers = await inquirer.default.prompt([
+            {
+                type: 'list',
+                name: 'aiProvider',
+                message: 'AI 제공자를 선택하세요:',
+                choices: [
+                    { name: 'Claude (Anthropic)', value: 'claude' },
+                    { name: 'OpenAI GPT', value: 'openai' },
+                    { name: '자동 선택', value: 'auto' }
+                ],
+                default: 'claude'
+            },
+            {
+                type: 'input',
+                name: 'doorayDomain',
+                message: 'Dooray 도메인을 입력하세요 (예: company.dooray.com):',
+                validate: (input) => input.trim() !== '' || 'Dooray 도메인은 필수입니다.'
+            },
+            {
+                type: 'input',
+                name: 'defaultBranch',
+                message: 'Git 기본 브랜치명을 입력하세요:',
+                default: 'main'
+            },
+            {
+                type: 'input',
+                name: 'branchPrefix',
+                message: '브랜치 접두사를 입력하세요:',
+                default: 'feat/'
+            },
+            {
+                type: 'confirm',
+                name: 'autoCommit',
+                message: '자동 커밋을 활성화하시겠습니까?',
+                default: true
+            },
+            {
+                type: 'confirm',
+                name: 'autoCreatePR',
+                message: 'PR 자동 생성을 활성화하시겠습니까?',
+                default: true
+            }
+        ]);
+        const config = await loadConfig();
+        config.ai.provider = answers.aiProvider;
+        config.dooray.domain = answers.doorayDomain;
+        config.git.defaultBranch = answers.defaultBranch;
+        config.git.branchPrefix = answers.branchPrefix;
+        config.git.autoCommit = answers.autoCommit;
+        config.github.autoCreatePR = answers.autoCreatePR;
+        await saveConfig(config);
+        logger_1.logger.success('설정이 완료되었습니다!');
+    }
+    catch (error) {
+        logger_1.logger.error('설정 마법사 실행 중 오류가 발생했습니다:', error);
+    }
+});
 //# sourceMappingURL=config.js.map
