@@ -221,7 +221,7 @@ configCommand
       }
     } catch (error) {
       logger.error('설정 목록 조회 중 오류가 발생했습니다:', error);
-    }
+      }
   });
 
 // 설정 파일 위치 출력
@@ -252,7 +252,7 @@ configCommand
       
       if (config.ai.maxTokens <= 0) {
         errors.push('ai.maxTokens는 양수여야 합니다.');
-      }
+        }
       
       // Dooray 설정 검증
       if (!config.dooray.domain) {
@@ -272,7 +272,7 @@ configCommand
       }
     } catch (error) {
       logger.error('설정 검증 중 오류가 발생했습니다:', error);
-    }
+        }
   });
 
 // 설정 백업
@@ -323,13 +323,13 @@ configCommand
   .command('wizard')
   .description('대화형 설정 마법사')
   .action(async () => {
-    const inquirer = await import('inquirer');
+  const inquirer = await import('inquirer');
     
     try {
       logger.info('Dooray AI 설정 마법사를 시작합니다...');
-      
-      const answers = await inquirer.default.prompt([
-        {
+  
+  const answers = await inquirer.default.prompt([
+    {
           type: 'list',
           name: 'aiProvider',
           message: 'AI 제공자를 선택하세요:',
@@ -339,39 +339,39 @@ configCommand
             { name: '자동 선택', value: 'auto' }
           ],
           default: 'claude'
-        },
-        {
-          type: 'input',
+    },
+    {
+      type: 'input',
           name: 'doorayDomain',
           message: 'Dooray 도메인을 입력하세요 (예: company.dooray.com):',
           validate: (input) => input.trim() !== '' || 'Dooray 도메인은 필수입니다.'
-        },
-        {
+    },
+    {
           type: 'input',
           name: 'defaultBranch',
           message: 'Git 기본 브랜치명을 입력하세요:',
           default: 'main'
-        },
-        {
-          type: 'input',
+    },
+    {
+      type: 'input',
           name: 'branchPrefix',
           message: '브랜치 접두사를 입력하세요:',
           default: 'feat/'
-        },
-        {
-          type: 'confirm',
+    },
+    {
+      type: 'confirm',
           name: 'autoCommit',
           message: '자동 커밋을 활성화하시겠습니까?',
           default: true
-        },
-        {
-          type: 'confirm',
+    },
+    {
+      type: 'confirm',
           name: 'autoCreatePR',
           message: 'PR 자동 생성을 활성화하시겠습니까?',
           default: true
-        }
-      ]);
-      
+    }
+  ]);
+  
       const config = await loadConfig();
       config.ai.provider = answers.aiProvider;
       config.dooray.domain = answers.doorayDomain;
@@ -379,7 +379,7 @@ configCommand
       config.git.branchPrefix = answers.branchPrefix;
       config.git.autoCommit = answers.autoCommit;
       config.github.autoCreatePR = answers.autoCreatePR;
-      
+  
       await saveConfig(config);
       logger.success('설정이 완료되었습니다!');
       

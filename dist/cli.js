@@ -130,43 +130,79 @@ program.addCommand(new commander_1.Command('mcp')
                     case 'tools/call':
                         const { name, arguments: args } = message.params;
                         if (name === 'generate_code') {
-                            // Claude Code 연동
-                            const { ClaudeCodeClient } = await Promise.resolve().then(() => __importStar(require('./services/ai/claude-code-client')));
-                            const client = new ClaudeCodeClient();
-                            const result = await client.generateCode({
-                                prompt: args.prompt,
-                                language: args.language
-                            });
-                            return {
-                                jsonrpc: '2.0',
-                                id: message.id,
-                                result: {
-                                    content: [{
-                                            type: 'text',
-                                            text: `# 생성된 코드\n\n\`\`\`${args.language || 'text'}\n${result.code}\n\`\`\`\n\n## 설명\n${result.explanation}`
-                                        }]
-                                }
-                            };
+                            try {
+                                // Claude Code 연동
+                                const { ClaudeCodeClient } = await Promise.resolve().then(() => __importStar(require('./services/ai/claude-code-client')));
+                                const client = new ClaudeCodeClient();
+                                const result = await client.generateCode({
+                                    prompt: args.prompt,
+                                    language: args.language
+                                });
+                                return {
+                                    jsonrpc: '2.0',
+                                    id: message.id,
+                                    result: {
+                                        content: [{
+                                                type: 'text',
+                                                text: `# 생성된 코드\n\n\`\`\`${args.language || 'text'}\n${result.code}\n\`\`\`\n\n## 설명\n${result.explanation}`
+                                            }]
+                                    }
+                                };
+                            }
+                            catch (error) {
+                                logger_1.logger.error(`Claude Code 오류: ${error}`);
+                                return {
+                                    jsonrpc: '2.0',
+                                    id: message.id,
+                                    error: {
+                                        code: -1,
+                                        message: `코드 생성 실패: ${error instanceof Error ? error.message : 'Unknown error'}`
+                                    }
+                                };
+                            }
                         }
                         if (name === 'get_dooray_task') {
-                            // Dooray 연동
-                            const { DoorayClient } = await Promise.resolve().then(() => __importStar(require('./services/dooray/client')));
-                            const credentials = {
-                                apiKey: process.env['DOORAY_API_TOKEN'] || '',
-                                baseUrl: process.env['DOORAY_API_BASE_URL'] || 'https://api.dooray.com'
-                            };
-                            const client = new DoorayClient(credentials);
-                            const task = await client.getTask(args.projectId, args.taskId);
-                            return {
-                                jsonrpc: '2.0',
-                                id: message.id,
-                                result: {
-                                    content: [{
-                                            type: 'text',
-                                            text: `# Dooray 태스크\n\n**제목:** ${task.subject}\n**내용:**\n${task.body}`
-                                        }]
+                            try {
+                                logger_1.logger.info(`Dooray 태스크 조회 시작: projectId=${args.projectId}, taskId=${args.taskId}`);
+                                // 환경 변수 확인
+                                const apiToken = process.env['DOORAY_API_TOKEN'];
+                                const baseUrl = process.env['DOORAY_API_BASE_URL'] || 'https://api.dooray.com';
+                                if (!apiToken) {
+                                    throw new Error('DOORAY_API_TOKEN 환경 변수가 설정되지 않았습니다.');
                                 }
-                            };
+                                logger_1.logger.info(`API 설정: baseUrl=${baseUrl}, token=${apiToken ? '설정됨' : '없음'}`);
+                                // Dooray 연동
+                                const { DoorayClient } = await Promise.resolve().then(() => __importStar(require('./services/dooray/client')));
+                                const credentials = {
+                                    apiKey: apiToken,
+                                    baseUrl: baseUrl
+                                };
+                                const client = new DoorayClient(credentials);
+                                logger_1.logger.info('DoorayClient 생성 완료');
+                                const task = await client.getTask(args.projectId, args.taskId);
+                                logger_1.logger.info(`태스크 조회 성공: ${task.subject}`);
+                                return {
+                                    jsonrpc: '2.0',
+                                    id: message.id,
+                                    result: {
+                                        content: [{
+                                                type: 'text',
+                                                text: `# Dooray 태스크 정보\n\n**프로젝트 ID:** ${args.projectId}\n**태스크 ID:** ${args.taskId}\n\n**제목:** ${task.subject}\n\n**내용:**\n${task.body}\n\n**상태:** ${task.status}\n**우선순위:** ${task.priority}\n**담당자 ID:** ${task.assigneeId || 'N/A'}\n**생성일:** ${task.createdAt}\n**마감일:** ${task.dueDate || 'N/A'}`
+                                            }]
+                                    }
+                                };
+                            }
+                            catch (error) {
+                                logger_1.logger.error(`Dooray 태스크 조회 오류: ${error}`);
+                                return {
+                                    jsonrpc: '2.0',
+                                    id: message.id,
+                                    error: {
+                                        code: -1,
+                                        message: `태스크 조회 실패: ${error instanceof Error ? error.message : 'Unknown error'}`
+                                    }
+                                };
+                            }
                         }
                         throw new Error(`Unknown tool: ${name}`);
                     case 'initialize':
@@ -190,7 +226,7 @@ program.addCommand(new commander_1.Command('mcp')
             }
             catch (error) {
                 const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                logger_1.logger.error(`MCP 오류: ${errorMessage}`);
+                logger_1.logger.error(`MCP 메시지 처리 오류: ${errorMessage}`);
                 return {
                     jsonrpc: '2.0',
                     id: null,
@@ -204,14 +240,19 @@ program.addCommand(new commander_1.Command('mcp')
         // 표준 입력에서 메시지 읽기
         let buffer = '';
         process.stdin.on('data', async (chunk) => {
-            buffer += chunk;
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
-            for (const line of lines) {
-                if (line.trim()) {
-                    const response = await handleMessage(line);
-                    console.log(JSON.stringify(response));
+            try {
+                buffer += chunk;
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+                for (const line of lines) {
+                    if (line.trim()) {
+                        const response = await handleMessage(line);
+                        console.log(JSON.stringify(response));
+                    }
                 }
+            }
+            catch (error) {
+                logger_1.logger.error(`MCP 데이터 처리 오류: ${error}`);
             }
         });
         process.stdin.on('end', () => {
