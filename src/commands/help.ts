@@ -9,7 +9,7 @@ export const helpCommand = new Command('help')
   .argument('[command]', '도움말을 볼 명령어')
   .option('--quick-start', '빠른 시작 가이드를 표시합니다')
   .option('--categories', '명령어를 카테고리별로 표시합니다')
-  .action(async (command: string | undefined, options, cmd) => {
+  .action(async (command: string | undefined, _options, cmd) => {
     try {
       const opts = cmd.opts();
       

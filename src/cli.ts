@@ -9,6 +9,7 @@ import { taskCommand } from './commands/task';
 import { branchCommand } from './commands/branch';
 import { prCommand } from './commands/pr';
 import { helpCommand } from './commands/help';
+import { aiTestCommand } from './commands/ai/test';
 
 const program = new Command();
 
@@ -47,6 +48,7 @@ program.addCommand(taskCommand);
 program.addCommand(branchCommand);
 program.addCommand(prCommand);
 program.addCommand(helpCommand);
+program.addCommand(aiTestCommand);
 
 // 하위 호환성을 위한 기본 명령어 유지
 program

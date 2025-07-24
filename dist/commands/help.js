@@ -14,7 +14,7 @@ exports.helpCommand = new commander_1.Command('help')
     .argument('[command]', '도움말을 볼 명령어')
     .option('--quick-start', '빠른 시작 가이드를 표시합니다')
     .option('--categories', '명령어를 카테고리별로 표시합니다')
-    .action(async (command, options, cmd) => {
+    .action(async (command, _options, cmd) => {
     try {
         const opts = cmd.opts();
         // 빠른 시작 가이드
