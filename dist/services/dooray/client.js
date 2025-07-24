@@ -116,8 +116,29 @@ class DoorayClient {
     async getTask(projectId, taskId) {
         try {
             logger_1.logger.info(`Fetching task: ${projectId}/${taskId}`);
-            const response = await this.client.get(`/v1/projects/${projectId}/posts/${taskId}`);
-            const task = this.validateResponse(response.data);
+            const response = await this.client.get(`/project/v1/projects/${projectId}/posts/${taskId}`);
+            const rawTask = this.validateResponse(response.data);
+            // API 응답을 DoorayTask 형태로 변환
+            const task = {
+                id: rawTask.id,
+                subject: rawTask.subject,
+                body: rawTask.body?.content || rawTask.body || '',
+                status: rawTask.workflowClass || 'registered',
+                priority: rawTask.priority || 'normal',
+                assigneeId: rawTask.users?.to?.[0]?.member?.organizationMemberId,
+                reporterId: rawTask.users?.from?.member?.organizationMemberId || '',
+                projectId: rawTask.project?.id || projectId,
+                createdAt: rawTask.createdAt,
+                updatedAt: rawTask.updatedAt,
+                dueDate: rawTask.dueDate,
+                tags: rawTask.tags || [],
+                attachments: [],
+                comments: [],
+                workflow: rawTask.workflow ? {
+                    currentStep: rawTask.workflow.name,
+                    availableTransitions: []
+                } : undefined
+            };
             logger_1.logger.success(`Task fetched successfully: ${task.subject}`);
             return task;
         }

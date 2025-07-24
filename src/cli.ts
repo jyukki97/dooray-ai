@@ -164,10 +164,11 @@ program.addCommand(
                     const client = new DoorayClient(credentials);
                     logger.info('DoorayClient 생성 완료');
                     
+                    logger.info('DoorayClient.getTask 호출 시작...');
                     const task = await client.getTask(args.projectId, args.taskId);
                     logger.info(`태스크 조회 성공: ${task.subject}`);
                     
-                    return {
+                    const response = {
                       jsonrpc: '2.0',
                       id: message.id,
                       result: {
@@ -177,6 +178,9 @@ program.addCommand(
                         }]
                       }
                     };
+                    
+                    logger.info('응답 생성 완료, 반환합니다.');
+                    return response;
                   } catch (error) {
                     logger.error(`Dooray 태스크 조회 오류: ${error}`);
                     return {
@@ -227,6 +231,8 @@ program.addCommand(
         
         // 표준 입력에서 메시지 읽기
         let buffer = '';
+        let processing = false;
+        
         process.stdin.on('data', async (chunk) => {
           try {
             buffer += chunk;
@@ -235,18 +241,33 @@ program.addCommand(
             
             for (const line of lines) {
               if (line.trim()) {
+                processing = true;
+                logger.info(`처리 중인 메시지: ${line.substring(0, 100)}...`);
                 const response = await handleMessage(line);
                 console.log(JSON.stringify(response));
+                process.stdout.write(''); // 출력 플러시
+                processing = false;
+                logger.info('메시지 처리 완료');
               }
             }
           } catch (error) {
             logger.error(`MCP 데이터 처리 오류: ${error}`);
+            processing = false;
           }
         });
         
         process.stdin.on('end', () => {
-          logger.info('MCP 모드 종료');
-          process.exit(0);
+          // 처리 중인 요청이 있다면 잠시 대기
+          if (processing) {
+            logger.info('처리 중인 요청이 있어 3초 대기...');
+            setTimeout(() => {
+              logger.info('MCP 모드 종료');
+              process.exit(0);
+            }, 3000);
+          } else {
+            logger.info('MCP 모드 종료');
+            process.exit(0);
+          }
         });
         
       } catch (error) {
